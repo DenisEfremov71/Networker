@@ -10,11 +10,17 @@ import SwiftUI
 @MainActor
 @Observable class ArticlesViewModel {
     private(set) var articles: [Article] = []
+    private(set) var savedArticleIDs: [String] = []
     private var networker: Networking
+
+    var savedArticles: [Article] {
+        articles.filter { savedArticleIDs.contains($0.id) }
+    }
 
     init(networker: Networking) {
         self.networker = networker
         self.networker.delegate = self
+        reloadSavedArticles()
     }
 
     func fetchArticles() async {
@@ -45,6 +51,21 @@ import SwiftUI
             return
         }
         articles[articleIndex].downloadedImage = UIImage(data: data)
+    }
+
+    func readLater(_ article: Article) {
+        var savedArticles = UserDefaultsValue<[String]>(key: "savedArticles")
+        let savedIDs: [String] = savedArticles.value ?? []
+        guard !savedIDs.contains(article.id) else { return }
+        savedArticles.append(article.id)
+        reloadSavedArticles()
+    }
+
+    func reloadSavedArticles() {
+        let storedSavedArticles = UserDefaultsValue<[String]>(
+            key: "savedArticles"
+        )
+        savedArticleIDs = storedSavedArticles.value ?? []
     }
 }
 

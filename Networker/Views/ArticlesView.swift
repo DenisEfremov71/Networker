@@ -6,17 +6,28 @@
 import SwiftUI
 
 struct ArticlesView: View {
-    @State private var viewModel = ArticlesViewModel(networker: Networker())
+    let viewModel: ArticlesViewModel
 
     var body: some View {
         List(viewModel.articles) { article in
             ArticleRow(article: article, image: .constant(nil))
                 .task { await viewModel.fetchImage(for: article) }
+                .swipeActions {
+                    Button {
+                        viewModel.readLater(article)
+                    } label: {
+                        Label("Read Later", systemImage: "bookmark")
+                    }
+                    .tint(.blue)
+                }
         }
         .task(viewModel.fetchArticles)
+        .navigationTitle("All Articles")
     }
 }
 
 #Preview {
-    ArticlesView()
+    NavigationStack {
+        ArticlesView(viewModel: ArticlesViewModel(networker: Networker()))
+    }
 }

@@ -14,19 +14,27 @@ struct MockNetworker: Networking {
     func fetch(_ request: Request) async throws -> Data {
         switch request {
         case is ArticleRequest:
-            let article = Article(
-                name: "Article Name",
-                description: "Article Description",
-                image: URL(string: "https://image.com")!,
-                id: "Article ID",
-                downloadedImage: nil
-            )
-            let articleData = ArticleData(article: article)
-            let articles = Articles(data: [articleData])
-            return try JSONEncoder().encode(articles)
+            return try articlesData()
         default:
             return Data()
         }
+    }
+
+    func fetch<T: Decodable>(url: URL) async throws -> T {
+        try JSONDecoder().decode(T.self, from: articlesData())
+    }
+
+    private func articlesData() throws -> Data {
+        let article = Article(
+            name: "Article Name",
+            description: "Article Description",
+            image: URL(string: "https://image.com")!,
+            id: "Article ID",
+            downloadedImage: nil
+        )
+        let articleData = ArticleData(article: article)
+        let articles = Articles(data: [articleData])
+        return try JSONEncoder().encode(articles)
     }
 }
 
